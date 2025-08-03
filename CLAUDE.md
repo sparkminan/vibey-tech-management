@@ -83,6 +83,9 @@
 - **GitHub CLIガイド**: `TESTER_GITHUB_CLI_GUIDE.md` - 最新追加！
 - **テスト戦略**: `INTEGRATED_TEST_STRATEGY.md`
 
+### 🆕 新規メンバー向け
+- **GitHubアカウント設定**: `GITHUB_ACCOUNT_SETUP_GUIDE.md` - アカウント作成から権限取得まで
+
 ---
 
 ## 🚀 即座に実行すべきコマンド
