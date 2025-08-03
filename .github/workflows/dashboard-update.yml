@@ -1,0 +1,128 @@
+name: Dashboard Auto Update
+
+on:
+  schedule:
+    - cron: '0 18 * * *'  # 毎日18:00 JST
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: |
+          npm install @octokit/rest
+          
+      - name: Update dashboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e "
+          const { Octokit } = require('@octokit/rest');
+          const fs = require('fs');
+          
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+          
+          async function updateDashboard() {
+            const now = new Date().toLocaleString('ja-JP');
+            
+            // Issues統計収集
+            const { data: issues } = await octokit.rest.issues.listForRepo({
+              owner: 'sparkminan',
+              repo: 'vibey-tech-management',
+              state: 'all',
+              per_page: 100
+            });
+            
+            const openIssues = issues.filter(i => i.state === 'open').length;
+            const closedIssues = issues.filter(i => i.state === 'closed').length;
+            const epicIssues = issues.filter(i => i.labels.some(l => l.name.includes('epic'))).length;
+            const riskIssues = issues.filter(i => i.labels.some(l => l.name.includes('risk'))).length;
+            
+            const dashboard = \`# Vibey Technologies - Master Dashboard
+          
+          最終更新: \${now}
+          
+          > このダッシュボードはGitHub Actionsにより自動更新されています
+          
+          ## 📊 統合プロジェクト概要
+          
+          ### 📋 Issue統計
+          - **オープンIssues**: \${openIssues}
+          - **クローズIssues**: \${closedIssues}
+          - **アクティブエピック**: \${epicIssues}
+          - **管理中リスク**: \${riskIssues}
+          
+          ### 🎯 プロジェクト状況
+          
+          | プロジェクト | GitHub | Issues | Status |
+          |------------|--------|--------|--------|
+          | [Claude Code Remote](https://github.com/sparkminan/claude-code-remote) | 🔗 | [Issues](https://github.com/sparkminan/claude-code-remote/issues) | 🚧 開発中 |
+          | [HENKAKU AI Archive](https://github.com/sparkminan/henkaku-ai-archive) | 🔗 | [Issues](https://github.com/sparkminan/henkaku-ai-archive/issues) | ✅ アクティブ |
+          
+          ## 🚨 今週の重要事項
+          
+          ### 🔥 緊急対応が必要
+          - Claude Code Remote: セキュリティ強化（HTTPS/WSS実装）
+          - テスト環境構築（iPhone実機調達）
+          
+          ### ⚡ 高優先度タスク
+          - 統合テスト計画実行（8/4-8/16）
+          - 品質向上ガイドライン実装
+          - GitHub Projects本格運用開始
+          
+          ## 📈 品質メトリクス
+          
+          ### 開発品質目標
+          - **テストカバレッジ**: 目標85%
+          - **セキュリティスコア**: 目標A+
+          - **パフォーマンス**: Lighthouse 95+
+          
+          ## 🔗 クイックアクセス
+          
+          ### 📚 ドキュメント
+          - [統一開発標準](./UNIFIED_DEVELOPMENT_STANDARDS.md)
+          - [品質改善ガイド](./QUALITY_IMPROVEMENT_GUIDE.md)
+          - [コード品質チェックリスト](./CODE_QUALITY_CHECKLIST.md)
+          
+          ### 📊 管理ツール
+          - [GitHub Projects](https://github.com/sparkminan/vibey-tech-management/projects)
+          - [Issues](https://github.com/sparkminan/vibey-tech-management/issues)
+          - [Discussions](https://github.com/sparkminan/vibey-tech-management/discussions)
+          
+          ---
+          
+          *このダッシュボードは毎日18:00に自動更新されます*
+          \`;
+            
+            fs.writeFileSync('dashboards/MASTER_DASHBOARD.md', dashboard);
+            console.log('Dashboard updated successfully');
+          }
+          
+          updateDashboard().catch(console.error);
+          "
+          
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add dashboards/MASTER_DASHBOARD.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "📊 Auto-update dashboard - $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
