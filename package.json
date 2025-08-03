@@ -1,0 +1,28 @@
+{
+  "name": "vibey-tech-management",
+  "version": "1.0.0",
+  "description": "Vibey Technologies プロジェクト管理ダッシュボード",
+  "main": "index.js",
+  "scripts": {
+    "sync": "node scripts/sync-github-data.js",
+    "generate-dashboard": "node scripts/generate-reports.js",
+    "update": "npm run sync && npm run generate-dashboard",
+    "setup": "npm install && npm run update"
+  },
+  "keywords": [
+    "project-management",
+    "dashboard",
+    "github"
+  ],
+  "author": "Vibey Technologies",
+  "license": "MIT",
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "dotenv": "^16.3.1",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4"
+  }
+}
