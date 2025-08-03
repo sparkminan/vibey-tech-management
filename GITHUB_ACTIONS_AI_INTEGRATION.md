@@ -207,9 +207,10 @@ jobs:
 ```
 
 ### 3. 品質保証AI (`qa-automation.yml`)
+**⚠️ 重要: QA-Miraは品質確認・テスト・レポートのみ。実装は一切行わない**
 
 ```yaml
-name: QA-Mira Automation
+name: QA-Mira Automation - Quality Check Only
 on:
   pull_request:
     types: [opened, synchronize]
